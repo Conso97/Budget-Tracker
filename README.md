@@ -34,7 +34,7 @@ https://drive.google.com/file/d/1TPwfdtozaPVfQzlR3YmdQzmk_ekYSsce/view
 
 
 <img id="styledImage"
-    src="modules/Budget Tracker.jpg" width="70%" height="70%"
+    src="models/Budget Tracker.jpg" width="70%" height="70%"
     alt="Budget Tracker"
   />
 
