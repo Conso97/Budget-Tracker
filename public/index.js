@@ -10,7 +10,7 @@ initIndexedDB()
   populateTotal();
 
   return getSavedTransactions(true);
-}).then((outstanding) => hasOutstanding = outstanding > 0)
+}).then((outstanding) => hasOutstanding = outstanding.length > 0);
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
