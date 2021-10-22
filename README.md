@@ -32,17 +32,10 @@ https://conso97.github.io/Budget-Tracker/
 
 https://drive.google.com/file/d/1eLhCg_wdh4pEtYSQIrvyfbTM3Pl7U8YU/view
 
-<img id="styledImage"
-    src="public/FitnessTracker.jpg" width="70%" height="70%"
-    alt="Fitness Tracker"
-  />
 
-<img id="styledImage"
-    src="public/FitnessChart.jpg" width="70%" height="70%"
-    alt="Fitness Tracker"
-  />
 
 # Contact 
 
 * Name: Consolata Njeri
 * Email: Conso4u@gmail.com
+
