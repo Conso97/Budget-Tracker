@@ -1,32 +1,16 @@
 let transactions = [];
 let myChart;
-let hasOutstanding = false; // 
+let hasOutstanding = false;
 
-// fetch("/api/transaction")
-//   .then(response => {
-//     return response.json();
-//   })
-//   .then(data => {
-//     // save db data on global variable
-//     transactions = data;
-
-//     populateTotal();
-//     populateTable();
-//     populateChart();
-//   });
-
-// TODO: fetch from db and call populate
-
-console.log("transactions before " + transactions);
 initIndexedDB()
 .then((data) => {
-  transactions = data;
-  console.log("transactions after " + data);
+  transactions = data.sort((a,b) => new Date(b.date) - new Date(a.date));
   populateChart();
   populateTable();
   populateTotal();
-  // hasOutstanding = getSavedTransactions(true) > 0;
-})
+
+  return getSavedTransactions(true);
+}).then((outstanding) => hasOutstanding = outstanding > 0)
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -189,11 +173,9 @@ function saveRecords(transactionsToSave, isOutstanding) {
             outstandingStore.add({name: transactionToSave.name, 
               value: transactionToSave.value, date: transactionToSave.date});
               hasOutstanding = true;
-              console.log("saving outstanding");
           } else {
             transactionStore.add({name: transactionToSave.name, 
               value: transactionToSave.value, date: transactionToSave.date});
-              console.log("saving old");
           }
         }
 
@@ -236,6 +218,7 @@ function getSavedTransactions(isOutstanding) {
             if (cursor) {
                 let value = cursor.value;
                 savedTransactions.unshift(value);
+
                 cursor.continue();
             }
             else {
@@ -257,21 +240,26 @@ function getSavedTransactions(isOutstanding) {
 // if send to server fails, then add to outstandind db
 // periodically try to send bulk to server (if connection exists); once succeeded, remove from outstanding db
 
-// var intervalId = setInterval(function() {
-//   retrySave();
-// }, 1000);
+var intervalId = setInterval(function() {
+  retrySave();
+}, 1000);
 
 function retrySave() {
 
   // try to save if there is connection and outstanding transactions
   if (navigator.onLine && hasOutstanding) {
-    fetch("/api/transaction/bulk", {
-      method: "POST",
-      body: JSON.stringify(outstandingTransactions),
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json"
-      }
+    var isOutstanding = true;
+    getSavedTransactions(isOutstanding)
+    .then((outstandingTransactions) => {
+      return fetch("/api/transaction/bulk", {
+
+        method: "POST",
+        body: JSON.stringify(outstandingTransactions),
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json"
+        }
+      });
     })
     .then(response => { 
       // if succeeded, remove outstanding from db   
@@ -329,7 +317,6 @@ function initIndexedDB() {
 
       request.onsuccess = function(event) {
         // get data from server
-        console.log("before fetch");
         return resolve(fetchDataFromServer());
       };
     } else {
@@ -350,7 +337,6 @@ function fetchDataFromServer() {
   .then(data => {
     // save data to indexed DB
     const isOutstanding = false; // these are already save on the server
-    console.log("before save");
     return saveRecords(data, isOutstanding);
 
   }).then((data) => {
