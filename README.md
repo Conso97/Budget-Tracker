@@ -26,7 +26,7 @@ In this activity I learnt:
 
 # Website
 
-https://conso97.github.io/Budget-Tracker/
+https://budget-t.herokuapp.com/
 
 # Walkthrough Video 
 
