@@ -171,7 +171,7 @@ function saveRecords(transactionsToSave, isOutstanding) {
 
   // add to unresolved transactions
   return new Promise (function(resolve) {
-    const request = window.indexedDB.open("database", 2);
+    const request = window.indexedDB.open("database", 1);
     request.onsuccess = () => {
         const db = request.result;
         const transaction = db.transaction(
@@ -200,7 +200,7 @@ function saveRecords(transactionsToSave, isOutstanding) {
         transaction.oncomplete = () => {
             db.close();
             console.log("done saving");
-            resolve(transactionsToSave);
+            return resolve(transactionsToSave);
         };
     };
   });
@@ -208,46 +208,48 @@ function saveRecords(transactionsToSave, isOutstanding) {
 
 
 function getSavedTransactions(isOutstanding) {
-  const request = window.indexedDB.open("database", 2);
-  request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction(
-          [ "all-transactions", "outstanding-transactions" ],
-          "readwrite"
-      );
-      const transactionStore = transaction.objectStore("all-transactions");
-      const outstandingStore = transaction.objectStore("outstanding-transactions");
-    
-      var savedTransactions = [];
-      var req  = null;
-      if (isOutstanding) {
-        req = outstandingStore.openCursor();
-      } else {
-        req = transactionStore.openCursor();
-      }
-
-      req.onerror = function(event) {
-        console.err("error fetching data");
-      };
-      req.onsuccess = function(event) {
-          let cursor = event.target.result;
-          if (cursor) {
-              let key = cursor.primaryKey;
-              let value = cursor.value;
-              savedTransactions.push(value);
-              cursor.continue();
-          }
-          else {
-              // no more results
-          }
-      };
+  return new Promise (function(resolve) {
+    var savedTransactions = [];
+    const request = window.indexedDB.open("database", 1);
+    request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction(
+            [ "all-transactions", "outstanding-transactions" ],
+            "readwrite"
+        );
+        const transactionStore = transaction.objectStore("all-transactions");
+        const outstandingStore = transaction.objectStore("outstanding-transactions");
       
-      // Clean up: close connection
-      transaction.oncomplete = () => {
-          db.close();
-      };
-      return savedTransactions;
-  };
+        var req  = null;
+        if (isOutstanding) {
+          req = outstandingStore.openCursor();
+        } else {
+          req = transactionStore.openCursor();
+        }
+
+        req.onerror = function(event) {
+          console.err("error fetching data");
+        };
+        req.onsuccess = function(event) {
+            let cursor = event.target.result;
+            if (cursor) {
+                let key = cursor.primaryKey;
+                let value = cursor.value;
+                savedTransactions.push(value);
+                cursor.continue();
+            }
+            else {
+                // no more results
+            }
+        };
+        
+        // Clean up: close connection
+        transaction.oncomplete = () => {
+            db.close();
+            return resolve(savedTransactions);
+        };
+    };
+  });
 }
 // flow: ping server for transactions and populate into db if on init
 // query db for data to populate
@@ -280,7 +282,7 @@ function retrySave() {
 }
 
 function clearOutstanding() {
-  const request = window.indexedDB.open("database", 2);
+  const request = window.indexedDB.open("database", 1);
   request.onsuccess = () => {
       const db = request.result;
       const transaction = db.transaction(
@@ -303,29 +305,39 @@ function clearOutstanding() {
 }
 
 function initIndexedDB() {
-  return new Promise (function(resolve) {
-    const request = window.indexedDB.open("database", 1);
-    // Create schema
-    request.onupgradeneeded = event => {
-        alert("here");
-        const db = event.target.result;
-        
-        const transactionStore = db.createObjectStore(
-            "all-transactions",
-            { keyPath: "name" }
-        );
-        const outstandingStore = db.createObjectStore(
-            "outstanding-transactions",
-            { keyPath: [ "name" ] }
-        );
-    };
 
-    request.onsuccess = function(event) {
-      // get data from server
-      console.log("before fetch");
-      return resolve(fetchDataFromServer());
-    };
-  });
+  return new Promise (function(resolve) {
+
+    if(document.cookie.indexOf('mycookie')==-1) {
+      document.cookie = 'mycookie=1';
+
+      // create on first page load and fill with data from server
+      const request = window.indexedDB.open("database", 1);
+      // Create schema
+      request.onupgradeneeded = event => {
+          const db = event.target.result;
+          
+          const transactionStore = db.createObjectStore(
+              "all-transactions",
+              { keyPath: "name" }
+          );
+          const outstandingStore = db.createObjectStore(
+              "outstanding-transactions",
+              { keyPath: [ "name" ] }
+          );
+      };
+
+      request.onsuccess = function(event) {
+        // get data from server
+        console.log("before fetch");
+        return resolve(fetchDataFromServer());
+      };
+    } else {
+      // otherwise, use cache
+      var isOutstanding = false; // load saved data
+      return resolve(getSavedTransactions(isOutstanding));
+    }
+    });
   
 }
 
