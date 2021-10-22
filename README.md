@@ -30,9 +30,13 @@ https://conso97.github.io/Budget-Tracker/
 
 # Walkthrough Video 
 
-https://drive.google.com/file/d/1eLhCg_wdh4pEtYSQIrvyfbTM3Pl7U8YU/view
+https://drive.google.com/file/d/1TPwfdtozaPVfQzlR3YmdQzmk_ekYSsce/view
 
 
+<img id="styledImage"
+    src="modules/Budget Tracker.jpg" width="70%" height="70%"
+    alt="Budget Tracker"
+  />
 
 # Contact 
 
