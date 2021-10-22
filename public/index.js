@@ -20,11 +20,12 @@ let hasOutstanding = false; //
 console.log("transactions before " + transactions);
 initIndexedDB()
 .then((data) => {
-  console.log("transactions after " + transactions);
+  transactions = data;
+  console.log("transactions after " + data);
   populateChart();
   populateTable();
   populateTotal();
-  hasOutstanding = getSavedTransactions(true) > 0
+  // hasOutstanding = getSavedTransactions(true) > 0;
 })
 
 function populateTotal() {
@@ -233,9 +234,8 @@ function getSavedTransactions(isOutstanding) {
         req.onsuccess = function(event) {
             let cursor = event.target.result;
             if (cursor) {
-                let key = cursor.primaryKey;
                 let value = cursor.value;
-                savedTransactions.push(value);
+                savedTransactions.unshift(value);
                 cursor.continue();
             }
             else {
@@ -337,7 +337,7 @@ function initIndexedDB() {
       var isOutstanding = false; // load saved data
       return resolve(getSavedTransactions(isOutstanding));
     }
-    });
+  });
   
 }
 
